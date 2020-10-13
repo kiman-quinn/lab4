@@ -1,0 +1,42 @@
+
+h1{
+    font-weight: 100;
+    font-size: 70px;
+    margin-top: -50px;
+    position: absolute;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%)
+}
+
+.chart{
+    margin-top: 120px;
+}
+
+.x.label{
+    font-size: 12px;
+}
+
+.y.label{
+    font-size: 10px;
+}
+.legend{
+    font-size: 10px;
+}
+.tooltip{
+    position: fixed;
+    display: block;
+    /* background-color:white; */
+    color: white;
+}
+.axis path,
+        .axis line { 
+	        fill: none;
+	        stroke: #333;
+	        shape-rendering: crispEdges;
+        }
+        /* labels */
+        .axis text {
+	        font-family: sans-serif;
+	        font-size: 11px;
+        }

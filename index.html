@@ -1,0 +1,224 @@
+<!DOCTYPE html >
+<html>
+<head>
+  <title>Lab 4 Scales and Axes</title>
+
+<script type = "text/javascript" src="https://d3js.org/d3.v6.min.js"></script>
+<script src="https://d3js.org/d3-scale-chromatic.v2.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+<link rel="stylesheet" href="style.css" />
+ 
+</head>
+
+
+<body>
+
+    <div class="container">
+
+        <h1>World Health</h1>
+
+        <p></p>
+
+        <div class = "chart">
+        <!-- You will append a SVG here-->
+            <svg class = "chart"></svg>
+        </div>
+
+        <div class="tooltip">
+            <!-- you will programmatically insert tooltip info here-->
+            <svg class = "tooltip"></svg>
+        </div>
+
+        <div class = "legend">
+            <svg class = "legend"></svg>
+        </div>
+
+    </div>
+
+</body>
+    <script type="text/javascript">
+        d3.csv('wealth-health-2014.csv', d3.autoType)
+            .then(data=>{
+                console.log('wealthHealth', data);
+                wealthHealth = data;
+
+                // function sortData(d){
+                //     d.sort((a,b) => {
+                //     return a.Population - b.Population;
+                //     });
+                // }
+                // wealthHealth = sortData(data)
+                console.log(wealthHealth);
+
+                const margin = {top: 20, left: 20, bottom: 20, right:20};
+                const width = 400 - margin.left - margin.right;
+                const height = 300 - margin.top - margin.bottom;
+
+                const svg = d3.select('.chart')
+		            .append('svg')
+                    .attr('width', width+margin.left + margin.right)
+                    .attr('height', height+margin.top + margin.bottom)
+                    .append('g')
+                    .attr('transform', 'translate('+margin.left+','+margin.right+')')
+                
+                let minMax = d3.extent(wealthHealth.map(function(item){
+                            return (item.Income);
+                        }
+                        ));
+                let incomeMin = minMax[0]
+                let incomeMax = minMax[1]
+
+                const xScale = d3.scaleLinear()
+                    .domain(d3.extent(wealthHealth, d=>d.Income))
+                    .range([0,width]);
+
+                const yScale = d3.scaleLinear()
+                    .domain(d3.extent(wealthHealth, d=>d.LifeExpectancy))
+                    .range([height,0]); 
+
+                console.log(xScale(incomeMax)); // returns the chart width
+
+                const colorScale = d3.scaleOrdinal()
+	                .range(d3.schemePastel2);
+
+
+                svg.selectAll("dot")
+                    .data(wealthHealth)
+                    .enter()
+                    .append("circle")
+                    .attr("cx", d=>xScale(d.Income))
+                    .attr("cy", d=>yScale(d.LifeExpectancy)) 
+                    .attr("r", function(d){
+                        if (d.Population > 1000000000){
+                            return 20;
+                        }
+                        else if (d.Population > 100000000) {
+                            return 8;
+                        }
+                        else{
+                            return 3;
+                        }
+                    })
+                    .style('fill', function(d) {
+		                return colorScale(d.Region);
+                    })
+                    .attr("stroke", "black")
+                    .attr("opacity", 0.9)
+                    .on("mouseenter", (event, d) => {
+                        const pos = d3.pointer(event, window)
+                        d3.select(".tooltip")
+                            .style("opacity", 1)
+                            .style("left", (pos[0] + 10 + "px"))
+                            .style("top", (pos[1] + 10 + "px"))
+                            .style("background-color", "black")
+                            .html(`Country:  ${d.Country} <br>
+                            Life Expectancy: ${d.LifeExpectancy} <br>
+                            Income: ${d.Income} <br>
+                            Population: ${d.Population} <br>
+                            Region: ${d.Region}`
+                            );
+                    })
+
+                    .on("mouseleave", (event, d) => {
+	                    // hide the tooltip
+                        d3.select('.tooltip').style('opacity', 0)
+                    });
+
+
+                const xAxis = d3.axisBottom()
+	                .scale(xScale)
+                    .ticks(10, "s")
+
+                const yAxis = d3.axisLeft()
+	                .scale(yScale)
+                    .ticks(10, "s")
+                    
+                // Draw the axis
+                svg.append("g")
+	                .attr("class", "axis x-axis")
+                    .attr("transform", `translate(0, ${height})`)
+	                .call(xAxis);
+
+                svg.append("g")
+	                .attr("class", "axis y-axis")
+                    .attr("transform", `translate(0, 0)`)
+	                .call(yAxis);
+
+                svg.append("text")
+                    .attr("class", "x label")
+                    .attr("text-anchor", "end")
+                    .attr("x", width)
+                    .attr("y", height - 6)
+                    .text("Income");
+
+                svg.append("text")
+                    .attr("class", "y label")
+                    .attr("text-anchor", "end")
+                    .attr("y", -10)
+                    .attr("x", 52)
+                    .attr("dy", ".75em")
+                    .attr("transform", "rotate(90)")
+                    .text("Life Expectancy");
+                
+
+                // var size = 15
+                // var legend = svg.selectAll(".legend")
+                //     .data(colorScale.domain())
+                //     .enter()
+                //     .append("g")
+                //     .attr("class", "legend")
+                //     .attr("x", 200)
+                //     .attr("y", function(d,i){ return 100 + i*(size+5)}) // 100 is where the first dot appears. 25 is the distance between dots
+                //     .attr("width", size)
+                //     .attr("height", size)
+                //     .style("fill", function(d){ return colorScale(d.Region)})
+
+                // svg.selectAll("labels")
+                //     .data(colorScale.domain())
+                //     .enter()
+                //     .append("text")
+                //     .attr("x", 200 + size*1.2)
+                //     .attr("y", function(d,i){ return 100 + i*(size+5) + (size/2)}) // 100 is where the first dot appears. 25 is the distance between dots
+                //     .style("fill", "black")
+                //     .text(function(d){ return d.Region})
+                //     .attr("text-anchor", "left")
+                //     .style("alignment-baseline", "middle")
+
+                var legendRectSize = 12;
+                var legendSpacing = 2;
+
+                var legend = svg.selectAll('.legend')
+                    .data(colorScale.domain())
+                    .enter()
+                    .append('g')
+                    .attr('class', 'legend')
+                    .attr('transform', function(d, i) {
+                        var height = legendRectSize + legendSpacing;
+                        var offset =  height * colorScale.domain().length / 2;
+                        var horz = -2 * legendRectSize;
+                        var vert = i * height - offset;
+                        return 'translate(' + horz + ',' + vert + ')';
+                    });
+
+                legend.append('rect')
+                    .attr('width', legendRectSize)
+                    .attr('height', legendRectSize) 
+                    .style('fill', colorScale)
+                    .style('stroke', colorScale)
+                    .attr("x", width-90)
+                    .attr("y", height-100);
+          
+                legend.append('text')
+                    .attr('x', legendRectSize + legendSpacing)
+                    .attr('y', legendRectSize - legendSpacing)
+                    .text(function(d) { return d; })
+                    .attr("x", width-74)
+                    .attr("y", height - 90);
+
+
+            });
+    </script>
+
+
+
+</html>
